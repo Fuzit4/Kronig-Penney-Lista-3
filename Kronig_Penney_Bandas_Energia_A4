@@ -1,0 +1,184 @@
+
+# Importação das bibliotecas
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import brentq
+
+# ============================================================
+# 1. DEFINIÇÃO DOS PARÂMETROS
+# ============================================================
+
+# Define 1000 valores de ka/pi entre -1 e 1
+# Esse intervalo corresponde à primeira zona de Brillouin
+j = np.linspace(-1, 1, 1000)
+
+# Lista para armazenar os pares [ka/pi, E/E_B]
+dados = []
+
+# Define a equação transcendental de Kronig-Penney
+# x = Ka
+# j = ka/pi
+# P = 3 é a intensidade adimensional do potencial
+def f(x, j):
+    return np.cos(x) + 3*np.sin(x)/x - np.cos(j*np.pi)
+
+# Define 1000 pontos entre 0,01 e 30 para procurar as raízes
+# O valor x = 0 é evitado devido à divisão por x
+x = np.linspace(0.01, 14, 1000)
+
+
+# ============================================================
+# 2. CÁLCULO NUMÉRICO DAS RAÍZES E ENERGIAS
+# ============================================================
+
+# Percorre todos os valores de ka/pi
+for ki in j:
+
+    # Exibe o valor de ka/pi utilizado
+    #print(f"\nka = {ki:.4f} pi")
+
+    # Percorre os intervalos entre pontos consecutivos de x
+    for i in range(len(x)-1):
+
+        # Verifica se a função muda de sinal no intervalo
+        # Uma mudança de sinal indica a existência de uma raiz
+        if f(x[i], ki)*f(x[i+1], ki) < 0:
+
+            # Calcula numericamente a raiz pelo método de Brent
+            # args=(ki,) fornece o segundo argumento da função f
+            raiz = brentq(f, x[i], x[i+1], args=(ki,))
+
+            # Calcula a energia normalizada correspondente
+            # E/E_B = (Ka/pi)^2
+            energia = (raiz/np.pi)**2
+
+            # Exibe a raiz encontrada e sua respectiva energia
+            #print(f"Raiz = {raiz:.6f}, E/E_B = {energia:.6f}")
+
+            # Armazena o par [ka/pi, E/E_B]
+            dados.append([ki, energia])
+
+# Converte a lista de resultados em uma matriz NumPy
+# Coluna 0: ka/pi
+# Coluna 1: E/E_B
+dados = np.array(dados)
+
+
+# ============================================================
+# 3. CONFIGURAÇÃO DAS DIMENSÕES DA FOLHA A4
+# ============================================================
+
+# Dimensões da folha A4 em centímetros
+folha_largura = 21
+folha_altura = 29.7
+
+# Dimensões da região do gráfico em centímetros
+grafico_largura = 14
+grafico_altura = 10
+
+# Posição da região do gráfico na folha, em centímetros
+# As distâncias são medidas a partir do canto inferior esquerdo
+pos_x = 2.5
+pos_y = 15
+
+# Cria uma figura com as dimensões de uma folha A4
+# O Matplotlib utiliza polegadas: 1 polegada = 2,54 cm
+# dpi = 300 define a resolução para elementos rasterizados
+fig = plt.figure(
+    figsize=(folha_largura/2.54, folha_altura/2.54),
+    dpi=300
+)
+
+
+# ============================================================
+# 4. POSICIONAMENTO DO GRÁFICO NA FOLHA
+# ============================================================
+
+# Cria os eixos na posição e com as dimensões especificadas
+# add_axes utiliza coordenadas normalizadas entre 0 e 1
+# [posição horizontal, posição vertical, largura, altura]
+# Por isso, cada medida é dividida pela dimensão da folha
+ax = fig.add_axes([
+    pos_x/folha_largura,
+    pos_y/folha_altura,
+    grafico_largura/folha_largura,
+    grafico_altura/folha_altura
+])
+
+
+# ============================================================
+# 5. REPRESENTAÇÃO DAS BANDAS DE ENERGIA
+# ============================================================
+
+# Representa os estados permitidos por pontos
+# A primeira coluna contém ka/pi
+# A segunda coluna contém E/E_B
+# Como j varia de -1 a 1, os valores negativos já estão incluídos
+ax.scatter(
+    dados[:, 0],
+    dados[:, 1],
+    s=5,
+    color='royalblue',
+    label='Estados permitidos'
+)
+ax.scatter(
+    dados[:, 0],
+    dados[:, 1],
+    s=10,
+    color='black'
+)
+
+# Define os limites do eixo horizontal
+ax.set_xlim(-1.2, 1.2)
+
+# Define o limite inferior do eixo vertical como zero
+ax.set_ylim(bottom=0)
+
+# Define as posições das marcações no eixo horizontal
+ax.set_xticks([-1, -0.5, 0, 0.5, 1])
+
+# Define os rótulos das marcações utilizando LaTeX
+ax.set_xticklabels([
+    r'$-1$',
+    r'$-\frac{1}{2}$',
+    r'$0$',
+    r'$\frac{1}{2}$',
+    r'$1$'
+])
+
+# Identifica os eixos e define o tamanho das fontes
+ax.set_xlabel(r'$ka/\pi$', fontsize=14)
+ax.set_ylabel(r'$E/E_B$', fontsize=14)
+
+# Representa as bordas da primeira zona de Brillouin
+# Linhas verticais em ka/pi = -1 e ka/pi = 1
+ax.axvline(-1, color='gray', linestyle='--', alpha=0.5)
+ax.axvline(1, color='gray', linestyle='--', alpha=0.5)
+
+
+# ============================================================
+# 6. CONFIGURAÇÃO DA APARÊNCIA
+# ============================================================
+
+# Define o tamanho dos números nos eixos
+ax.tick_params(axis='both', labelsize=12)
+
+# Adiciona uma grade pontilhada com transparência
+ax.grid(True, linestyle=':', alpha=0.3)
+
+# Exibe a legenda dos estados permitidos
+ax.legend()
+
+
+# ============================================================
+# 7. SALVAMENTO E EXIBIÇÃO
+# ============================================================
+
+# Salva a folha A4 inteira em formato PDF vetorial
+fig.savefig('Bandas_A4.pdf')
+
+# Salva a folha A4 inteira em formato PNG com 300 dpi
+fig.savefig('Bandas_A4.png', dpi=300)
+
+# Exibe a figura
+plt.show()

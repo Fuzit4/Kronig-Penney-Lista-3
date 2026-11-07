@@ -1,0 +1,40 @@
+
+import numpy as np
+from scipy.optimize import brentq
+
+# Define a equação transcendental de Kronig-Penney
+# x = Ka
+# P = 3 representa a intensidade adimensional do potencial
+# ka = 2*pi é o número de onda de Bloch multiplicado pelo período da rede
+def Eqtrans(x):
+    return np.cos(x) + 3*np.sin(x)/x - np.cos(2*np.pi)
+
+# Define 1000 pontos entre 0,01 e 14 para procurar as raízes
+# O valor x = 0 é evitado devido à divisão por x
+x = np.linspace(0.01, 14, 1000)
+
+# Cria uma lista vazia para armazenar as raízes encontradas
+raizes = []
+
+# Percorre os intervalos entre pontos consecutivos
+for i in range(len(x)-1):
+
+    # Verifica se a função muda de sinal no intervalo
+    # Uma mudança de sinal indica a existência de pelo menos uma raiz
+    if Eqtrans(x[i])*Eqtrans(x[i+1]) < 0:
+
+        # Calcula numericamente a raiz pelo método de Brent
+        raiz = brentq(Eqtrans, x[i], x[i+1])
+
+        # Armazena a raiz encontrada
+        raizes.append(raiz)
+
+        # Calcula a energia normalizada correspondente à raiz
+        # E/E_B = (Ka/pi)^2
+        energia = (raiz/np.pi)**2
+
+        # Exibe a raiz e sua respectiva energia
+        print(f"Raiz = {raiz:.6f}, E/E_B = {energia:.6f}")
+
+# Exibe a lista completa das raízes encontradas
+print("\nRaízes encontradas:", raizes)

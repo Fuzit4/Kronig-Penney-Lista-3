@@ -117,16 +117,17 @@ ax = fig.add_axes([
 ax.scatter(
     dados[:, 0],
     dados[:, 1],
-    s=5,
-    color='royalblue',
-    label='Estados permitidos'
+    s=10,
+    color='black'
 )
 ax.scatter(
     dados[:, 0],
     dados[:, 1],
-    s=10,
-    color='black'
+    s=5,
+    color='royalblue',
+    label='Estados permitidos'
 )
+
 
 # Define os limites do eixo horizontal
 ax.set_xlim(-1.2, 1.2)
